@@ -47,6 +47,8 @@ const sheet = ss.getSheetByName("Sheet1") || ss.insertSheet("Sheet1");
 
 - This project is an upgrade from the previous `vba-webdata` repo. Since VBA is approaching the end of its mainstream support and requires Excel for execution.
 - This Google Apps Script version provides a more stable, modern, and free solution for extracting table data from webpages.
+- For exporting the scraped data to a new Google Sheet or Excel file, use the companion project [export-as](https://github.com/erujs/export-as).  
+These two projects work well together.
 - This project is designed to be simple, lightweight, and entirely free to use with Google Sheets.
 - We retain `Module.bas` in the repository for anyone who wishes to continue using the legacy VBA version.
 
