@@ -12,7 +12,7 @@ function scrapeTables() {
   const sheet = ss.getSheetByName("Sheet1") || ss.insertSheet("Sheet1");
 
   // 👇 Change this URL to the page you want to scrape
-  const url = "https://www.w3schools.com/html/html_tables.asp";
+  const url = "https://www.w3schools.com/css/css_table.asp";
 
   let resp;
   try {
@@ -21,7 +21,6 @@ function scrapeTables() {
       headers: { "User-Agent": "Mozilla/5.0" }, // mimic a browser
     });
   } catch (err) {
-    // ⚠️ ALERT blocks until the user clicks OK in the sheet UI
     SpreadsheetApp.getUi().alert("Fetch failed: " + err.message);
     return;
   }
@@ -39,13 +38,14 @@ function scrapeTables() {
   // Find all <table> blocks
   const tableBlocks = Array.from(cleaned.matchAll(/<table\b[\s\S]*?<\/table>/gi)).map(m => m[0]);
   if (tableBlocks.length === 0) {
-    // ⚠️ ALERT blocks until the user clicks OK in the sheet UI
     SpreadsheetApp.getUi().alert("No <table> elements found.");
     return;
   }
 
-  // Parse each table into structured values
-  const parsed = tableBlocks.map(parseTableToValues);
+  // Parse each table into structured values and filter out empty tables
+  const parsed = tableBlocks
+    .map(parseTableToValues)
+    .filter(t => t.headers.length > 0 || t.rows.length > 0);
 
   // Clear sheet before writing
   sheet.clearContents();
@@ -53,8 +53,15 @@ function scrapeTables() {
 
   parsed.forEach((t, i) => {
     const rows = [];
-    if (t.headers.length) rows.push(t.headers); // insert headers if found
+
+    // Insert headers if found
+    if (t.headers.length) rows.push(t.headers);
+
+    // Insert data rows
     rows.push(...t.rows);
+
+    // Skip entirely if both headers and rows are empty
+    if (rows.length === 0) return;
 
     // Ensure all rows are same width
     const maxCols = rows.reduce((m, r) => Math.max(m, r.length), 0);
@@ -70,7 +77,6 @@ function scrapeTables() {
     startRow += padded.length + 2; // space before next table
   });
 
-  // ⚠️ ALERT blocks until the user clicks OK in the sheet UI
   SpreadsheetApp.getUi().alert("Done — found " + parsed.length + " table(s).");
 }
 
@@ -101,13 +107,12 @@ function parseTableToValues(tableHtml) {
 
   return {
     headers: headers.map(cleanCellContent),
-    rows: rows.map(r => r.map(cleanCellContent)),
+    rows: rows.length ? rows.map(r => r.map(cleanCellContent)) : [],
   };
 }
 
 function extractCellsFromRow(rowHtml, type = "td|th") {
-  // Capture <td> or <th> contents
-  const regex = new RegExp(`<(${type})\\b[^>]*>([\\s\S]*?)<\\/\\1>`, "gi");
+  const regex = new RegExp(`<(${type})\\b[^>]*>([\\s\\S]*?)<\\/\\1>`, "gi");
   const cells = [];
   let match;
   while ((match = regex.exec(rowHtml)) !== null) {
@@ -117,6 +122,5 @@ function extractCellsFromRow(rowHtml, type = "td|th") {
 }
 
 function cleanCellContent(content) {
-  // Remove any remaining HTML tags and tidy whitespace
   return content.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
 }
