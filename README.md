@@ -1,6 +1,6 @@
 # scraper-as
 
-Table Scraper ~ Google Apps Script project that extracts <table> elements from any webpage and pastes them into a Google Sheet.  
+Table Scraper ~ Google Apps Script project that extracts `<table>` elements from any webpage and pastes them into a Google Sheet.  
 
 ## Setup Instructions
 
